@@ -49,6 +49,18 @@ class GestpayResponse {
 	 * Error description
 	 */		
 	protected $error_description	= '';
+	
+	/**
+	 * list of properties to return with toArray an toJson methods
+	 * @var array
+	 */
+	protected $_properties = array(
+		'transaction_result',
+		'shop_transaction_id',
+		'bank_transaction_id',
+		'bank_auth_code',
+		'error_description',
+	);
 
 	/**
 	 * Create a GestpayResponse Object
@@ -67,6 +79,18 @@ class GestpayResponse {
 		$this->error_code			= (string)$Response->ErrorCode;
 		$this->error_description	= (string)$Response->ErrorDescription; 
 	}
+	
+	public function toArray(){
+		$data = [];
+		foreach($this->_properties as $prop){
+			$data[$prop] = $this->{$prop};
+		}
+		return $data;
+	}
+	public function toJson(){
+		return @json_encode($this->toArray());
+	}
+	
 	/**
 	 * Get the transaction result
 	 *
