@@ -42,7 +42,7 @@ Open `config/gestpay.php` configuration file and set `shopLogin` and `uicCode`:
 ```php
 return [
     'shopLogin'      => 'YOUR_SHOP_LOGIN',
-    'uicCode'        => 'CURRENCY_CODE',
+    'uicCode'        => 'CURRENCY_CODE', 
     'test'           => true // supported: true|false 
 ];
 ```
@@ -65,9 +65,14 @@ As always, paying is the easiest thing
 ```php
 gestpay()->pay($amount, $shopTransactionId);
 ```
+
 That's all! 
 - $amount: is the amount you have to pay
 - $shopTransactionId: is the unique identifier you have assigned to the transaction
+You can add optional parameters:
+- $languageId : see https://api.gestpay.it/#language-codes 
+- $buyerName : buyer First name and second name (https://docs.gestpay.it/soap/s2s/authorization-request/)
+- $buyerEmail : buyer email address (https://docs.gestpay.it/soap/s2s/authorization-request/)
  
 I was joking, that's not all! Now you have to handle the callback.
 Based on the gestpay configuration, you now have to create the routes. For example, you can create a controller that handles callbacks through the method "**gestpayCallback**"
@@ -85,6 +90,8 @@ public function gestpayCallback($status){
 `$gestpay_response` will be a GestpayResponse object. You can retrieve $gestpay_response properties using the following methods:
 - `$gestpay_response->getTransactionResult()` return **transaction_result**; should be true or false
 - `$gestpay_response->getShopTransactionId()` return **shop_transaction_id**; the `$shopTransactionId` you have sent through `pay` method
+- `$gestpay_response->getBankAuthCode()` return **bank_auth_code**;  the bank authorization code
+- `$gestpay_response->getBankTransactionId()` return **bank_transaction_id**; the bank transaction id 
 - `$gestpay_response->getErrorCode()` return **error_code**; setting to "0" if the transaction is successful
 - `$gestpay_response->getErrorDescription()` return **error_description**; error code literal description in the language you have chosen
 
