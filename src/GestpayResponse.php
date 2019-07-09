@@ -21,6 +21,18 @@ class GestpayResponse {
 	protected $transaction_result	= false;
 
 	/**
+	 * The bank_transaction_id
+	 * Bank Transaction ID
+	 */	
+	protected $bank_transaction_id	= '';
+
+	/**
+	 * The bank_auth_code
+	 * Bank $bank_auth_code
+	 *
+	 **/	
+	protected $bank_auth_code	= '';
+	/**
 	 * The shop_transaction_id
 	 * Transaction ID
 	 */	
@@ -46,13 +58,15 @@ class GestpayResponse {
 	 * @param $error_code string The error_code
 	 * @param $error_description string The error_description
 	 */
-	public function __construct($transaction_result, $shop_transaction_id, $error_code, $error_description) {
-		$this->transaction_result	= $transaction_result;
-		$this->shop_transaction_id	= $shop_transaction_id;
-		$this->error_code			= $error_code;
-		$this->error_description	= $error_description;
+	public function __construct($Response) {
+		
+		$this->transaction_result	= (strtolower($Response->TransactionResult) == 'ok');
+		$this->shop_transaction_id	= (string)$Response->ShopTransactionID;
+		$this->bank_transaction_id	= (string)$Response->BankTransactionID;
+		$this->bank_auth_code	= 	(string)$Response->AuthorizationCode;
+		$this->error_code			= (string)$Response->ErrorCode;
+		$this->error_description	= (string)$Response->ErrorDescription; 
 	}
-
 	/**
 	 * Get the transaction result
 	 *
@@ -63,12 +77,28 @@ class GestpayResponse {
 	}
 
 	/**
-	 * Get the transaction result
+	 * Get the client transaction id
 	 *
-	 * @return $shop_transaction_id boolean The shop_transaction_id
+	 * @return $shop_transaction_id string The shop_transaction_id
 	 */
 	public function getShopTransactionId() {
 		return $this->shop_transaction_id;
+	}
+	/**
+	 * Get the bank transaction id
+	 *
+	 * @return $bank_transaction_id string The bank_transaction_id
+	 */
+	public function getBankTransactionId() {
+		return $this->bank_transaction_id;
+	}
+	/**
+	 * Get the bank auth code
+	 *
+	 * @return $bank_auth_code string The bank auth code
+	 */
+	public function getBankAuthCode() {
+		return $this->bank_auth_code;
 	}
 
 	/**
