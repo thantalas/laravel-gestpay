@@ -13,7 +13,6 @@
 namespace Biscolab\Gestpay;
 
 use Exception;
-use Redirect;
 use Biscolab\Gestpay\GestpayResponse;
 
 class GestpayBuilder {
@@ -76,17 +75,32 @@ class GestpayBuilder {
 	 * @param $amount the Transaction amount. Do not insert thousands separator. Decimals, max. 2 numbers, are optional and separator is the point (Mandatory)
 	 * @param $shopTransactionId the Identifier attributed to merchant’s transaction (Mandatory)
 	 * @param $languageId the language ID (for future use), default = 1 (italian) - see http://api.gestpay.it/#language-codes
+	 * @param $buyerName the name of the buyer (https://docs.gestpay.it/soap/s2s/authorization-request/) : usefull to prefill the name of customer 
+	 * @param $buyerEmail the email of the buyer (https://docs.gestpay.it/soap/s2s/authorization-request/) : usefull to prefill the email of customer 
 	 *
 	 * @return boolean | redirect on payment page
 	 */
-    public function pay($amount, $shopTransactionId, $languageId = 1)
+    public function pay($amount, $shopTransactionId, $languageId = 1, $buyerName = '', $buyerEmail = '')
     {
+    	
+    	$toEncrypt = ['amount' => $amount, 'shopTransactionId' => $shopTransactionId];
 
-        $res = $this->Encrypt(['amount' => $amount, 'shopTransactionId' => $shopTransactionId]);
-
-        if ( false !== strpos($res, '<TransactionResult>OK</TransactionResult>') && preg_match('/<CryptDecryptString>([^<]+)<\/CryptDecryptString>/', $res, $match) ) {
+    	if(!empty($buyerName)){
+    		$toEncrypt['buyerName'] = $buyerName;
+    	}
+    	if(!empty($buyerEmail)){
+    		$toEncrypt['buyerEmail'] = $buyerEmail;
+    	}
+    	
+    	$res = $this->Encrypt($toEncrypt);
+        $ResPreg = preg_match('/<CryptDecryptString>([^<]+)<\/CryptDecryptString>/', $res, $match) ;
+     
+        if ( false !== strpos($res, '<TransactionResult>OK</TransactionResult>') && $ResPreg) {
         	$payment_page_url = ($this->test)? $this->payment_page_test_url : $this->payment_page_prod_url;
-            return Redirect::to($payment_page_url.'?a=' . $this->shopLogin . '&b=' . $match[1]);
+        	/**
+        	 * work also with older verison of Laravel
+        	 */
+        	header("Location: ".$payment_page_url.'?a=' . $this->shopLogin . '&b=' . $match[1]);
         }
 
         return '';
@@ -156,13 +170,13 @@ class GestpayBuilder {
         $xml = self::cleanXML($xml_response);
 
         $response = $xml->Body->DecryptResponse->DecryptResult->GestPayCryptDecrypt;
-
         $transaction_result 	= (strtolower($response->TransactionResult) == 'ok');
         $shop_transaction_id 	= (string)$response->ShopTransactionID;        
         $error_code 			= (string)$response->ErrorCode;        
         $error_description 		= (string)$response->ErrorDescription;        
 
-        $result = new GestpayResponse($transaction_result, $shop_transaction_id, $error_code, $error_description);
+        //$result = new GestpayResponse($transaction_result, $shop_transaction_id, $error_code, $error_description);
+        $result = new GestpayResponse($response);
 
         return $result;
     }
@@ -198,7 +212,6 @@ class GestpayBuilder {
         $xml_res = curl_exec($soap);
 
         curl_close($soap);
-
         return $xml_res;
     }
 
